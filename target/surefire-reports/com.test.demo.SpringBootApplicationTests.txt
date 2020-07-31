@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: com.test.demo.SpringBootApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.032 s <<< FAILURE! - in com.test.demo.SpringBootApplicationTests
+testUser  Time elapsed: 0.208 s  <<< ERROR!
+org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.myapp.dao.impl.UserDaoImpl' available
+	at com.test.demo.SpringBootApplicationTests.testUser(SpringBootApplicationTests.java:43)
+
