@@ -19,6 +19,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.myapp.framework.MyAspect;
 
 @Entity(name = "user")
 public class User implements UserDetails, Comparable<User> {
@@ -39,6 +40,8 @@ public class User implements UserDetails, Comparable<User> {
 	@OneToMany(mappedBy = "user")
 	@JsonIgnore
 	private Set<Schedulazione> schedulazioni;
+	
+	private String authority;
 	
 	@Override
 	public boolean equals(Object o) {
@@ -91,10 +94,7 @@ public class User implements UserDetails, Comparable<User> {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		if(username.equals("nicola")) {
-			return Arrays.asList(new SimpleGrantedAuthority("ADMIN"), new SimpleGrantedAuthority("ACTUATOR"), new SimpleGrantedAuthority("ROLE_READER"));
-		}
-		return Arrays.asList(new SimpleGrantedAuthority("ROLE_READER"));
+		return Arrays.asList(new SimpleGrantedAuthority(authority));
 	}
 
 	@Override
@@ -117,6 +117,14 @@ public class User implements UserDetails, Comparable<User> {
 		return true;
 	}
 
+	public String getAuthority() {
+		return authority;
+	}
+
+	public void setAuthority(String authority) {
+		this.authority = authority;
+	}
+	
 	@Override
 	public String toString() {
 		return "User: " + internalid + " " + username;

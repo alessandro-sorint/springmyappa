@@ -2,6 +2,7 @@
 	import="
    java.util.List, 
    com.myapp.entity.Schedulazione"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <script
 	src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
@@ -23,19 +24,23 @@
 	}
 %>
 
-</br>
+<sec:authorize access="hasAnyAuthority('ADMIN')">
+    </br></br></br>
 
-<button id="getAllSchedulazioniButton">ALL</button>
-(ritorna tutte le schedulazioni di tutti gli utenti)
-<div id="restgetAllResult"></div>
-
-
-</br>
-Inserisci l'id della schedulazione da rimuovere <input type="text" id="deleteSchedulazioniid"/> <button id="deleteSchedulazioniButton">delete</button>
-<div id="deleteSchedulazioniResult"></div>
-
-Inserisci lo username dell'utente <input type="text" id="deleteSchedulazioniUsername"/> <button id="deleteSchedulazioniUserButton">delete all</button>
-<div id="deleteSchedulazioniUserResult"></div>
+	<div >
+		<button id="getAllSchedulazioniButton">ALL</button>
+		(ritorna tutte le schedulazioni di tutti gli utenti)
+		<div id="restgetAllResult"></div>
+	</div>
+	
+	
+	</br>
+	Inserisci l'id della schedulazione da rimuovere <input type="text" id="deleteSchedulazioniid"/> <button id="deleteSchedulazioniButton">delete</button>
+	<div id="deleteSchedulazioniResult"></div>
+	
+	Inserisci lo username dell'utente <input type="text" id="deleteSchedulazioniUsername"/> <button id="deleteSchedulazioniUserButton">delete all</button>
+	<div id="deleteSchedulazioniUserResult"></div>
+</sec:authorize>
 
 <script>
 	$(document).ready(function() {

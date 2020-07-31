@@ -35,6 +35,7 @@ import com.myapp.services.UserService;
 //https://www.baeldung.com/role-and-privilege-for-spring-security-registration
 //https://stackoverflow.com/questions/3785706/whats-the-difference-between-secured-and-preauthorize-in-spring-security-3
 //https://www.baeldung.com/spring-security-expressions	
+//https://www.baeldung.com/spring-security-taglibs   TAGLIB
 
 @Configuration
 @EnableGlobalMethodSecurity(
