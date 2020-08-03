@@ -55,10 +55,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>org.springframework.security</groupId>
-		    <artifactId>spring-security-taglibs</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
 		</dependency>
 
 		<!-- Per usare le taglibs -->
@@ -109,6 +109,23 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
 			<scope>compile</scope>
+		</dependency>
+
+		<!-- JWT -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.auth0</groupId> -->
+		<!-- <artifactId>java-jwt</artifactId> -->
+		<!-- <version>3.10.3</version> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>java-jwt</artifactId>
+			<version>3.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>jwks-rsa</artifactId>
+			<version>0.12.0</version>
 		</dependency>
 	</dependencies>
 	<build>
