@@ -10,6 +10,7 @@ public class TokenUtil {
 	private static final String SECRET_SIGNATURE = "keysecret123456";
 	private static Algorithm algorithmInstance;
 	private static JWTVerifier verifierInstance;
+	public static final String issuer = "TokenUtil";
 	
 	private Algorithm getAlgorithm() {
 		if(algorithmInstance == null) {
@@ -26,7 +27,7 @@ public class TokenUtil {
 		try {
 			if(verifierInstance == null) {
 				verifierInstance = JWT.require(getAlgorithm())
-			        .withIssuer("auth0")
+			        .withIssuer(issuer)
 			        .build();
 			}
 		}catch(Exception e) {
@@ -35,13 +36,13 @@ public class TokenUtil {
 		return verifierInstance;
 	}
 	
-	public String createToken() {
+	public String createToken(String username) {
 		String token = null;
 		
 		try {
 		    Algorithm algorithm = getAlgorithm();
 		    token = JWT.create()
-		        .withIssuer("TokenUtilGenerator")
+		        .withIssuer(issuer).withClaim("username", username).withClaim("provaKey", "provaValue")
 		        .sign(algorithm);
 		} catch (Exception e){
 		    e.printStackTrace();
