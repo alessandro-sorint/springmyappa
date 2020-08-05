@@ -1,6 +1,8 @@
 package com.myapp.controller;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,13 +20,20 @@ import org.springframework.web.servlet.ModelAndView;
 import com.myapp.entity.User;
 import com.myapp.framework.MyController;
 import com.myapp.framework.MyControllerMVC;
+import com.myapp.jwt.TokenUtil;
 import com.myapp.loggeduser.ActiveUserStore;
+import com.myapp.pojo.shop.Ordine;
+import com.myapp.repository.ArticoloRepository;
 
 @Controller
 public class MainController extends MyController{
 	
+	private String tokenHeader = "x-auth-token";
+	
 	@Autowired
     private ActiveUserStore activeUserStore;
+	@Autowired
+	private ArticoloRepository articoloRepository;
 	
 	@GetMapping("/")
     public String mainPage(User user, Model model) {
@@ -43,6 +52,18 @@ public class MainController extends MyController{
 		System.out.println("ciao utente " + getUser());
 		
 	    return "index";
+	}
+	
+	@GetMapping("shopMainPage")
+	public String shop(HttpServletResponse response) {
+		TokenUtil util = new TokenUtil();
+		String token =  util.getBuilder().withClaim("username", getUser().getUsername()).sign(util.getAlgorithm());
+		Cookie cookie = new Cookie(tokenHeader, token);
+        response.addCookie(cookie); 
+		
+		request.setAttribute("articoli", articoloRepository.getAll());
+		
+		return "shopMainPage";
 	}
 	
 	@RequestMapping(method = RequestMethod.GET, value = "/fail")

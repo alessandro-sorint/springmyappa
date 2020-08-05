@@ -15,3 +15,7 @@
 
 <p>SCHEDULAZIONI</p>
 <p>Vai alla <a href="/schedulazioni">pagina</a>
+
+</br></br>
+
+<p>Vai allo <a href="/shopMainPage">shop</a>
