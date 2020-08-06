@@ -35,6 +35,11 @@ public class ShopController {
 	@Autowired
 	private UserRepository userRepository;
 	
+	private static final String articoliClaim = "articoli";
+	private static final String usernameClaim = "username";
+	private static final String indirizzoSpedizioneClaim = "indirizzoSpedizione";
+	private static final String prezzoTotaleClaim = "prezzoTotale";
+	
 	@PostMapping("addarticolo")
 	public String addArticolo(HttpServletRequest request, HttpServletResponse response, @RequestParam("idArticolo") int idArticolo, @RequestParam("quantita") int quantita) throws Exception {
 		Articolo a = articoloRepository.findById(idArticolo);
@@ -46,14 +51,12 @@ public class ShopController {
 		}
 		
 		TokenUtil util = new TokenUtil();
-		DecodedJWT decoded = util.decodeToken(getToken(request));
+		String token = getToken(request);
+
+		String username = getUsernameClaim(token);
 		
-	 	Map<String,Claim> claims =  decoded.getClaims();
-	 	
-	 	Map<String,Object> articoli = null;
-	 	if(claims.containsKey("articoli")) {
-	 		articoli = claims.get("articoli").asMap();
-	 	}else {
+	 	Map<String,Object> articoli = getArticoliClaim(token);
+	 	if(articoli == null) {
 	 	    articoli = new HashMap();	
 	 	}
 	 	
@@ -62,7 +65,7 @@ public class ShopController {
 	 	}
 	 	articoli.put(Integer.toString(idArticolo), quantita);
 	 	
-	 	String token = util.getBuilder().withClaim("username", decoded.getClaim("username").asString()).withClaim("articoli", articoli).sign(util.getAlgorithm());
+	 	token = util.getBuilder().withClaim("username", username).withClaim("articoli", articoli).sign(util.getAlgorithm());
 	 	Cookie cookie = new Cookie(tokenHeader, token);
         response.addCookie(cookie); 
 	 	
@@ -73,23 +76,22 @@ public class ShopController {
 	
 	@GetMapping("aggiungiindirizzipage")
 	public String aggiungiIndirizzoPage(HttpServletRequest request, HttpServletResponse response) {
-		TokenUtil util = new TokenUtil();
-		DecodedJWT decoded = util.decodeToken(getToken(request));
-		
 		return "aggiungiIndirizzo";
 	}
 	
 	@PostMapping("aggiungiindirizzo")
 	public String aggiungiIndirizzo(HttpServletRequest request, HttpServletResponse response, @RequestParam("indirizzo") String indirizzoSpedizione) {
 		TokenUtil util = new TokenUtil();
-		DecodedJWT decoded = util.decodeToken(getToken(request));
+		
+		String token = getToken(request);
+		String username = getUsernameClaim(token);
 		
 		double prezzoTotale = 0;		
-		Map<String, Object> articoli = decoded.getClaim("articoli").asMap();
+		Map<String, Object> articoli = getArticoliClaim(token);
 		List<Articolo> articoliSelezionati = new ArrayList<Articolo>();
 
 		Ordine ordine = new Ordine();
-		ordine.setUser(userRepository.findByUsername(decoded.getClaim("username").asString()));
+		ordine.setUser(userRepository.findByUsername(username));
 		ordine.setIndirizzoSpedizione(indirizzoSpedizione);
 		
 		for(Map.Entry<String, Object> entry : articoli.entrySet()) {
@@ -106,8 +108,8 @@ public class ShopController {
 		request.setAttribute("articoliSelezionati", articoliSelezionati);
 		request.setAttribute("ordine", ordine);
 		
-		String token = util.getBuilder().withClaim("username", decoded.getClaim("username").asString())
-				.withClaim("articoli", decoded.getClaim("articoli").asMap())
+		token = util.getBuilder().withClaim("username", username)
+				.withClaim("articoli", articoli)
 				.withClaim("indirizzoSpedizione", indirizzoSpedizione)
 				.withClaim("prezzoTotale", prezzoTotale)
 				.sign(util.getAlgorithm());
@@ -121,15 +123,16 @@ public class ShopController {
 	@PostMapping("confermaOrdine")
 	public String confermaOrdine(HttpServletRequest request, HttpServletResponse response) {
 		TokenUtil util = new TokenUtil();
-		DecodedJWT decoded = util.decodeToken(getToken(request));
 		
-		String username = decoded.getClaim("username").asString();
-		String indirizzoSpedizione = decoded.getClaim("indirizzoSpedizione").asString();
-		double prezzoTotale = decoded.getClaim("prezzoTotale").asDouble();
-		Map<String, Object> articoli = decoded.getClaim("articoli").asMap();
+		String token = getToken(request);
+		
+		String username = getUsernameClaim(token);
+		String indirizzoSpedizione = getIndirizzoSpedizioneClaim(token);
+		double prezzoTotale = getPrezzoTotaleClaim(token);
+		Map<String, Object> articoli = getArticoliClaim(token);
 		
 		Ordine ordine = new Ordine();
-		ordine.setUser(userRepository.findByUsername(decoded.getClaim("username").asString()));
+		ordine.setUser(userRepository.findByUsername(username));
 		ordine.setIndirizzoSpedizione(indirizzoSpedizione);
 		ordine.setPrezzoFinale(prezzoTotale);
 		
@@ -139,8 +142,8 @@ public class ShopController {
 		    ordine.getArticoliOrdine().put(idArticolo, quantita);	
 		}
 		
-		String token = util.getBuilder().withClaim("username", username)
-				.withClaim("articoli", decoded.getClaim("articoli").asMap())
+		token = util.getBuilder().withClaim("username", username)
+				.withClaim("articoli", articoli)
 				.withClaim("indirizzoSpedizione", indirizzoSpedizione)
 				.withClaim("prezzoTotale", prezzoTotale)
 				.sign(util.getAlgorithm());
@@ -159,4 +162,52 @@ public class ShopController {
 		
 		return null;
 	}
+	
+	private Map<String,Object> getArticoliClaim(String token){
+		TokenUtil util = new TokenUtil();
+		DecodedJWT decoded = util.decodeToken(token);
+		
+	 	Map<String,Claim> claims =  decoded.getClaims();
+	 	
+	 	Map<String,Object> articoli = null;
+	 	if(claims.containsKey(articoliClaim)) {
+	 		articoli = claims.get(articoliClaim).asMap();
+	 	}
+	 	
+	 	return articoli;
+	}
+	
+	private String getUsernameClaim(String token) {
+		TokenUtil util = new TokenUtil();
+		DecodedJWT decoded = util.decodeToken(token);
+		String username = null;
+		if(decoded.getClaims().containsKey(usernameClaim)) {
+			username = decoded.getClaim(usernameClaim).asString();
+		}
+		
+		return username;
+	}
+	
+	private String getIndirizzoSpedizioneClaim(String token) {
+		TokenUtil util = new TokenUtil();
+		DecodedJWT decoded = util.decodeToken(token);
+		String indirizzoSpedizione = null;
+		if(decoded.getClaims().containsKey(indirizzoSpedizioneClaim)) {
+			indirizzoSpedizione = decoded.getClaim(indirizzoSpedizioneClaim).asString();
+		}
+		
+		return indirizzoSpedizione;
+	}
+	
+	private double getPrezzoTotaleClaim(String token) {
+		TokenUtil util = new TokenUtil();
+		DecodedJWT decoded = util.decodeToken(token);
+		double prezzoTotale = -1;
+		if(decoded.getClaims().containsKey(prezzoTotaleClaim)) {
+			prezzoTotale = decoded.getClaim(prezzoTotaleClaim).asDouble();
+		}
+		
+		return prezzoTotale;
+	}
+	
 }
