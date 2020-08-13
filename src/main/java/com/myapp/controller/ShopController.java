@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.CookieGenerator;
 
 import com.myapp.jwt.TokenUtil;
 import com.myapp.pojo.shop.Articolo;
@@ -40,6 +41,13 @@ public class ShopController {
 	private static final String indirizzoSpedizioneClaim = "indirizzoSpedizione";
 	private static final String prezzoTotaleClaim = "prezzoTotale";
 	
+	@GetMapping("addarticolo")
+	public String addArticoloPage(HttpServletRequest request) {
+		request.setAttribute("articoli", articoloRepository.getAll());
+		
+		return "shopMainPage";
+	}
+	
 	@PostMapping("addarticolo")
 	public String addArticolo(HttpServletRequest request, HttpServletResponse response, @RequestParam("idArticolo") int idArticolo, @RequestParam("quantita") int quantita) throws Exception {
 		Articolo a = articoloRepository.findById(idArticolo);
@@ -53,8 +61,8 @@ public class ShopController {
 		TokenUtil util = new TokenUtil();
 		String token = getToken(request);
 		Claims claims = util.getClaimsFromToken(token);
-
-	 	Map<String, Integer> articoli = getArticoliClaim(token);
+		
+	 	Map<String, Integer> articoli = getArticoliClaim(claims);
 	 	if(articoli == null) {
 	 	    articoli = new HashMap();	
 	 	    claims.put(articoliClaim, articoli);
@@ -77,6 +85,9 @@ public class ShopController {
 	
 	@GetMapping("aggiungiindirizzipage")
 	public String aggiungiIndirizzoPage(HttpServletRequest request, HttpServletResponse response) {
+		String token = getToken(request);
+		System.out.println("aggiungiIndirizzoPage token: " + token);
+		
 		return "aggiungiIndirizzo";
 	}
 	
@@ -85,13 +96,13 @@ public class ShopController {
 		TokenUtil util = new TokenUtil();
 		
 		String token = getToken(request);
-		String username = getUsernameClaim(token);
         Claims claims = util.getClaimsFromToken(token);
+        String username = getUsernameClaim(claims);
         
         claims.put(indirizzoSpedizioneClaim, indirizzoSpedizione);
 		
 		double prezzoTotale = 0;		
-		Map<String, Integer> articoli = getArticoliClaim(token);
+		Map<String, Integer> articoli = getArticoliClaim(claims);
 		List<Articolo> articoliSelezionati = new ArrayList<Articolo>();
 
 		Ordine ordine = new Ordine();
@@ -129,6 +140,10 @@ public class ShopController {
 		String token = getToken(request);
 		
         request.setAttribute(tokenHeader, token);
+        
+        CookieGenerator cg = new CookieGenerator();
+        cg.setCookieName(tokenHeader);
+        cg.removeCookie(response);
 		
 		return "fineShop";
 	}
@@ -143,10 +158,7 @@ public class ShopController {
 		return null;
 	}
 	
-	private Map<String,Integer> getArticoliClaim(String token){
-		TokenUtil util = new TokenUtil();
-	 	Map<String,Object> claims =  util.getClaimsFromToken(token);
-	 	
+	private Map<String,Integer> getArticoliClaim(Claims claims){
 	 	Map<String,Integer> articoli = null;
 	 	if(claims.containsKey(articoliClaim)) {
 	 		articoli = (Map<String,Integer>)claims.get(articoliClaim);
@@ -155,12 +167,7 @@ public class ShopController {
 	 	return articoli;
 	}
 	
-	private String getUsernameClaim(String token) {
-		System.out.println("TOKEN: " + token);
-		
-		TokenUtil util = new TokenUtil();
-		Map<String,Object> claims =  util.getClaimsFromToken(token);
-		System.out.println("claims: " + claims);
+	private String getUsernameClaim(Claims claims) {
 		String username = null;
 		if(claims.containsKey(usernameClaim)) {
 			username = (String)claims.get(usernameClaim);
@@ -169,9 +176,7 @@ public class ShopController {
 		return username;
 	}
 	
-	private String getIndirizzoSpedizioneClaim(String token) {
-		TokenUtil util = new TokenUtil();
-		Map<String,Object> claims =  util.getClaimsFromToken(token);
+	private String getIndirizzoSpedizioneClaim(Claims claims) {
 		String indirizzoSpedizione = null;
 		if(claims.containsKey(indirizzoSpedizioneClaim)) {
 			indirizzoSpedizione = (String)claims.get(indirizzoSpedizioneClaim);
@@ -180,9 +185,7 @@ public class ShopController {
 		return indirizzoSpedizione;
 	}
 	
-	private double getPrezzoTotaleClaim(String token) {
-		TokenUtil util = new TokenUtil();
-		Map<String,Object> claims =  util.getClaimsFromToken(token);
+	private double getPrezzoTotaleClaim(Claims claims) {
 		double prezzoTotale = -1;
 		if(claims.containsKey(prezzoTotaleClaim)) {
 			prezzoTotale = (double)claims.get(prezzoTotaleClaim);

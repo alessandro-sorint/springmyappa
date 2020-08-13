@@ -30,8 +30,6 @@ public class MainController extends MyController{
 	
 	@Autowired
     private ActiveUserStore activeUserStore;
-	@Autowired
-	private ArticoloRepository articoloRepository;
 	
 	@GetMapping("/")
     public String mainPage(User user, Model model) {
@@ -55,15 +53,19 @@ public class MainController extends MyController{
 	@GetMapping("shopMainPage")
 	public String shop(HttpServletResponse response) {
 		TokenUtil util = new TokenUtil();
-		DefaultClaims claims = new DefaultClaims();
-		claims.put("username",  getUser().getUsername());
-		String token =  util.generateToken(claims, null);
-		Cookie cookie = new Cookie(tokenHeader, token);
-        response.addCookie(cookie); 
 		
-		request.setAttribute("articoli", articoloRepository.getAll());
+		String token = util.getToken(request);
+
+		if(token == null || util.isTokenExpired(util.getToken(request))) {
+			DefaultClaims claims = new DefaultClaims();
+			claims.put("username",  getUser().getUsername());
+			token =  util.generateToken(claims, null);
+			System.out.println("shop creo token: " + token);
+			Cookie cookie = new Cookie(tokenHeader, token);
+	        response.addCookie(cookie);
+		}
 		
-		return "shopMainPage";
+		return "redirect:/shop/addarticolo";
 	}
 	
 	@RequestMapping(method = RequestMethod.GET, value = "/fail")

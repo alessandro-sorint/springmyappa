@@ -3,6 +3,9 @@ package com.myapp.jwt;
 import java.util.Date;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -13,10 +16,12 @@ public class TokenUtil {
 	public static final String issuer = "TokenUtil"; // entità che ha generato il token
 	static final String CLAIM_KEY_CREATED = "iat";
 	private static final Long expiration = (long) (1000*60*60);
+	
+	public static final String tokenHeader = "x-auth-token";
 
 	public String generateToken(Claims claims, String issuer) {
         if(issuer == null)
-        	issuer = this.issuer;
+        	issuer = issuer;
 		
 		return Jwts.builder().setClaims(claims).setExpiration(generateExpirationDate())
 				.setIssuer(issuer)
@@ -24,14 +29,14 @@ public class TokenUtil {
 	}
 	
 	public Claims getClaimsFromToken(String token) {
-        Claims claims;
+        Claims claims = null;
         try {
             claims = Jwts.parser()
                     .setSigningKey(SECRET_SIGNATURE)
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
-            claims = null;
+            e.printStackTrace();
         }
         return claims;
     }
@@ -57,8 +62,10 @@ public class TokenUtil {
         return  (!isTokenExpired(token));
     }
 	
-	private Boolean isTokenExpired(String token) {
+	public Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
+        if(expiration == null) return true;
+        
         return expiration.before(new Date());
     }
 	
@@ -83,4 +90,14 @@ public class TokenUtil {
         }
         return created;
     }
+	
+	public String getToken(HttpServletRequest request) {
+		Cookie[] cookie = request.getCookies();
+		for(Cookie c : cookie) {
+			if(c.getName().equals(tokenHeader))
+				return c.getValue();
+		}
+		
+		return null;
+	}
 }
